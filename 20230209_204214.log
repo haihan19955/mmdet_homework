@@ -1,0 +1,752 @@
+2023-02-09 20:42:14,910 - mmdet - INFO - Environment info:
+------------------------------------------------------------
+sys.platform: linux
+Python: 3.7.9 | packaged by conda-forge | (default, Feb 13 2021, 20:03:11) [GCC 9.3.0]
+CUDA available: True
+GPU 0: NVIDIA GeForce RTX 2080 Ti
+CUDA_HOME: /usr/local/cuda
+NVCC: Cuda compilation tools, release 11.5, V11.5.50
+GCC: gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0
+PyTorch: 1.7.0
+PyTorch compiling details: PyTorch built with:
+  - GCC 7.3
+  - C++ Version: 201402
+  - Intel(R) oneAPI Math Kernel Library Version 2021.4-Product Build 20210904 for Intel(R) 64 architecture applications
+  - Intel(R) MKL-DNN v1.6.0 (Git Hash 5ef631a030a6f73131c77892041042805a06064f)
+  - OpenMP 201511 (a.k.a. OpenMP 4.5)
+  - NNPACK is enabled
+  - CPU capability usage: AVX2
+  - CUDA Runtime 10.1
+  - NVCC architecture flags: -gencode;arch=compute_37,code=sm_37;-gencode;arch=compute_50,code=sm_50;-gencode;arch=compute_60,code=sm_60;-gencode;arch=compute_61,code=sm_61;-gencode;arch=compute_70,code=sm_70;-gencode;arch=compute_75,code=sm_75;-gencode;arch=compute_37,code=compute_37
+  - CuDNN 7.6.3
+  - Magma 2.5.2
+  - Build settings: BLAS=MKL, BUILD_TYPE=Release, CXX_FLAGS= -Wno-deprecated -fvisibility-inlines-hidden -DUSE_PTHREADPOOL -fopenmp -DNDEBUG -DUSE_FBGEMM -DUSE_QNNPACK -DUSE_PYTORCH_QNNPACK -DUSE_XNNPACK -DUSE_VULKAN_WRAPPER -O2 -fPIC -Wno-narrowing -Wall -Wextra -Werror=return-type -Wno-missing-field-initializers -Wno-type-limits -Wno-array-bounds -Wno-unknown-pragmas -Wno-sign-compare -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -Wno-unused-result -Wno-unused-local-typedefs -Wno-strict-overflow -Wno-strict-aliasing -Wno-error=deprecated-declarations -Wno-stringop-overflow -Wno-psabi -Wno-error=pedantic -Wno-error=redundant-decls -Wno-error=old-style-cast -fdiagnostics-color=always -faligned-new -Wno-unused-but-set-variable -Wno-maybe-uninitialized -fno-math-errno -fno-trapping-math -Werror=format -Wno-stringop-overflow, PERF_WITH_AVX=1, PERF_WITH_AVX2=1, PERF_WITH_AVX512=1, USE_CUDA=ON, USE_EXCEPTION_PTR=1, USE_GFLAGS=OFF, USE_GLOG=OFF, USE_MKL=ON, USE_MKLDNN=ON, USE_MPI=OFF, USE_NCCL=ON, USE_NNPACK=ON, USE_OPENMP=ON, 
+
+TorchVision: 0.8.0
+OpenCV: 4.6.0
+MMCV: 1.7.1
+MMCV Compiler: GCC 7.3
+MMCV CUDA Compiler: 10.1
+MMDetection: 2.28.1+
+------------------------------------------------------------
+
+2023-02-09 20:42:15,481 - mmdet - INFO - Distributed training: False
+2023-02-09 20:42:16,050 - mmdet - INFO - Config:
+model = dict(
+    type='MaskRCNN',
+    backbone=dict(
+        type='ResNet',
+        depth=50,
+        num_stages=4,
+        out_indices=(0, 1, 2, 3),
+        frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=False),
+        norm_eval=True,
+        style='caffe',
+        init_cfg=dict(
+            type='Pretrained',
+            checkpoint='open-mmlab://detectron2/resnet101_caffe')),
+    neck=dict(
+        type='FPN',
+        in_channels=[256, 512, 1024, 2048],
+        out_channels=256,
+        num_outs=5),
+    rpn_head=dict(
+        type='RPNHead',
+        in_channels=256,
+        feat_channels=256,
+        anchor_generator=dict(
+            type='AnchorGenerator',
+            scales=[8],
+            ratios=[0.5, 1.0, 2.0],
+            strides=[4, 8, 16, 32, 64]),
+        bbox_coder=dict(
+            type='DeltaXYWHBBoxCoder',
+            target_means=[0.0, 0.0, 0.0, 0.0],
+            target_stds=[1.0, 1.0, 1.0, 1.0]),
+        loss_cls=dict(
+            type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
+        loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+    roi_head=dict(
+        type='StandardRoIHead',
+        bbox_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=7, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32]),
+        bbox_head=dict(
+            type='Shared2FCBBoxHead',
+            in_channels=256,
+            fc_out_channels=1024,
+            roi_feat_size=7,
+            num_classes=1,
+            bbox_coder=dict(
+                type='DeltaXYWHBBoxCoder',
+                target_means=[0.0, 0.0, 0.0, 0.0],
+                target_stds=[0.1, 0.1, 0.2, 0.2]),
+            reg_class_agnostic=False,
+            loss_cls=dict(
+                type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+            loss_bbox=dict(type='L1Loss', loss_weight=1.0)),
+        mask_roi_extractor=dict(
+            type='SingleRoIExtractor',
+            roi_layer=dict(type='RoIAlign', output_size=14, sampling_ratio=0),
+            out_channels=256,
+            featmap_strides=[4, 8, 16, 32]),
+        mask_head=dict(
+            type='FCNMaskHead',
+            num_convs=4,
+            in_channels=256,
+            conv_out_channels=256,
+            num_classes=1,
+            loss_mask=dict(
+                type='CrossEntropyLoss', use_mask=True, loss_weight=1.0))),
+    train_cfg=dict(
+        rpn=dict(
+            assigner=dict(
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.7,
+                neg_iou_thr=0.3,
+                min_pos_iou=0.3,
+                match_low_quality=True,
+                ignore_iof_thr=-1),
+            sampler=dict(
+                type='RandomSampler',
+                num=256,
+                pos_fraction=0.5,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=False),
+            allowed_border=-1,
+            pos_weight=-1,
+            debug=False),
+        rpn_proposal=dict(
+            nms_pre=2000,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=dict(
+            assigner=dict(
+                type='MaxIoUAssigner',
+                pos_iou_thr=0.5,
+                neg_iou_thr=0.5,
+                min_pos_iou=0.5,
+                match_low_quality=True,
+                ignore_iof_thr=-1),
+            sampler=dict(
+                type='RandomSampler',
+                num=512,
+                pos_fraction=0.25,
+                neg_pos_ub=-1,
+                add_gt_as_proposals=True),
+            mask_size=28,
+            pos_weight=-1,
+            debug=False)),
+    test_cfg=dict(
+        rpn=dict(
+            nms_pre=1000,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
+            min_bbox_size=0),
+        rcnn=dict(
+            score_thr=0.05,
+            nms=dict(type='nms', iou_threshold=0.5),
+            max_per_img=100,
+            mask_thr_binary=0.5)))
+dataset_type = 'COCODataset'
+data_root = 'data/coco/'
+img_norm_cfg = dict(
+    mean=[103.53, 116.28, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
+train_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+    dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
+    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(
+        type='Normalize',
+        mean=[103.53, 116.28, 123.675],
+        std=[1.0, 1.0, 1.0],
+        to_rgb=False),
+    dict(type='Pad', size_divisor=32),
+    dict(type='DefaultFormatBundle'),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'])
+]
+test_pipeline = [
+    dict(type='LoadImageFromFile'),
+    dict(
+        type='MultiScaleFlipAug',
+        img_scale=(1333, 800),
+        flip=False,
+        transforms=[
+            dict(type='Resize', keep_ratio=True),
+            dict(type='RandomFlip'),
+            dict(
+                type='Normalize',
+                mean=[103.53, 116.28, 123.675],
+                std=[1.0, 1.0, 1.0],
+                to_rgb=False),
+            dict(type='Pad', size_divisor=32),
+            dict(type='ImageToTensor', keys=['img']),
+            dict(type='Collect', keys=['img'])
+        ])
+]
+data = dict(
+    samples_per_gpu=2,
+    workers_per_gpu=2,
+    train=dict(
+        type='CocoDataset',
+        ann_file=
+        '/home/haihan/projects/mmlab/data/balloon/train/annotation_coco.json',
+        img_prefix='/home/haihan/projects/mmlab/data/balloon/train/',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(type='LoadAnnotations', with_bbox=True, with_mask=True),
+            dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
+            dict(type='RandomFlip', flip_ratio=0.5),
+            dict(
+                type='Normalize',
+                mean=[103.53, 116.28, 123.675],
+                std=[1.0, 1.0, 1.0],
+                to_rgb=False),
+            dict(type='Pad', size_divisor=32),
+            dict(type='DefaultFormatBundle'),
+            dict(
+                type='Collect',
+                keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'])
+        ],
+        classes=('balloon', )),
+    val=dict(
+        type='CocoDataset',
+        ann_file=
+        '/home/haihan/projects/mmlab/data/balloon/val/annotation_coco.json',
+        img_prefix='/home/haihan/projects/mmlab/data/balloon/val/',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(1333, 800),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[103.53, 116.28, 123.675],
+                        std=[1.0, 1.0, 1.0],
+                        to_rgb=False),
+                    dict(type='Pad', size_divisor=32),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ],
+        classes=('balloon', )),
+    test=dict(
+        type='CocoDataset',
+        ann_file=
+        '/home/haihan/projects/mmlab/data/balloon/val/annotation_coco.json',
+        img_prefix='/home/haihan/projects/mmlab/data/balloon/val/',
+        pipeline=[
+            dict(type='LoadImageFromFile'),
+            dict(
+                type='MultiScaleFlipAug',
+                img_scale=(1333, 800),
+                flip=False,
+                transforms=[
+                    dict(type='Resize', keep_ratio=True),
+                    dict(type='RandomFlip'),
+                    dict(
+                        type='Normalize',
+                        mean=[103.53, 116.28, 123.675],
+                        std=[1.0, 1.0, 1.0],
+                        to_rgb=False),
+                    dict(type='Pad', size_divisor=32),
+                    dict(type='ImageToTensor', keys=['img']),
+                    dict(type='Collect', keys=['img'])
+                ])
+        ],
+        classes=('balloon', )))
+evaluation = dict(metric=['bbox', 'segm'])
+optimizer = dict(type='SGD', lr=0.001, momentum=0.9, weight_decay=0.0001)
+optimizer_config = dict(grad_clip=None)
+lr_config = dict(
+    policy='step',
+    warmup='linear',
+    warmup_iters=500,
+    warmup_ratio=0.001,
+    step=[8, 11])
+runner = dict(type='EpochBasedRunner', max_epochs=12)
+checkpoint_config = dict(interval=1)
+log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
+custom_hooks = [dict(type='NumClassCheckHook')]
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
+load_from = '/home/haihan/projects/mmlab/checkpoints/mask_rcnn_r101_caffe_fpn_1x_coco_20200601_095758-805e06c1.pth'
+resume_from = None
+workflow = [('train', 1)]
+opencv_num_threads = 0
+mp_start_method = 'fork'
+auto_scale_lr = dict(enable=False, base_batch_size=16)
+classes = ('balloon', )
+work_dir = './work_dirs/mmdet_haihan'
+auto_resume = False
+gpu_ids = range(0, 1)
+
+2023-02-09 20:42:16,050 - mmdet - INFO - Set random seed to 949849872, deterministic: False
+2023-02-09 20:42:33,162 - mmdet - INFO - Automatic scaling of learning rate (LR) has been disabled.
+2023-02-09 20:42:33,167 - mmdet - INFO - load checkpoint from local path: /home/haihan/projects/mmlab/checkpoints/mask_rcnn_r101_caffe_fpn_1x_coco_20200601_095758-805e06c1.pth
+2023-02-09 20:42:33,303 - mmdet - WARNING - The model and loaded state dict do not match exactly
+
+size mismatch for roi_head.bbox_head.fc_cls.weight: copying a param with shape torch.Size([81, 1024]) from checkpoint, the shape in current model is torch.Size([2, 1024]).
+size mismatch for roi_head.bbox_head.fc_cls.bias: copying a param with shape torch.Size([81]) from checkpoint, the shape in current model is torch.Size([2]).
+size mismatch for roi_head.bbox_head.fc_reg.weight: copying a param with shape torch.Size([320, 1024]) from checkpoint, the shape in current model is torch.Size([4, 1024]).
+size mismatch for roi_head.bbox_head.fc_reg.bias: copying a param with shape torch.Size([320]) from checkpoint, the shape in current model is torch.Size([4]).
+size mismatch for roi_head.mask_head.conv_logits.weight: copying a param with shape torch.Size([80, 256, 1, 1]) from checkpoint, the shape in current model is torch.Size([1, 256, 1, 1]).
+size mismatch for roi_head.mask_head.conv_logits.bias: copying a param with shape torch.Size([80]) from checkpoint, the shape in current model is torch.Size([1]).
+unexpected key in source state_dict: backbone.layer3.6.conv1.weight, backbone.layer3.6.bn1.weight, backbone.layer3.6.bn1.bias, backbone.layer3.6.bn1.running_mean, backbone.layer3.6.bn1.running_var, backbone.layer3.6.bn1.num_batches_tracked, backbone.layer3.6.conv2.weight, backbone.layer3.6.bn2.weight, backbone.layer3.6.bn2.bias, backbone.layer3.6.bn2.running_mean, backbone.layer3.6.bn2.running_var, backbone.layer3.6.bn2.num_batches_tracked, backbone.layer3.6.conv3.weight, backbone.layer3.6.bn3.weight, backbone.layer3.6.bn3.bias, backbone.layer3.6.bn3.running_mean, backbone.layer3.6.bn3.running_var, backbone.layer3.6.bn3.num_batches_tracked, backbone.layer3.7.conv1.weight, backbone.layer3.7.bn1.weight, backbone.layer3.7.bn1.bias, backbone.layer3.7.bn1.running_mean, backbone.layer3.7.bn1.running_var, backbone.layer3.7.bn1.num_batches_tracked, backbone.layer3.7.conv2.weight, backbone.layer3.7.bn2.weight, backbone.layer3.7.bn2.bias, backbone.layer3.7.bn2.running_mean, backbone.layer3.7.bn2.running_var, backbone.layer3.7.bn2.num_batches_tracked, backbone.layer3.7.conv3.weight, backbone.layer3.7.bn3.weight, backbone.layer3.7.bn3.bias, backbone.layer3.7.bn3.running_mean, backbone.layer3.7.bn3.running_var, backbone.layer3.7.bn3.num_batches_tracked, backbone.layer3.8.conv1.weight, backbone.layer3.8.bn1.weight, backbone.layer3.8.bn1.bias, backbone.layer3.8.bn1.running_mean, backbone.layer3.8.bn1.running_var, backbone.layer3.8.bn1.num_batches_tracked, backbone.layer3.8.conv2.weight, backbone.layer3.8.bn2.weight, backbone.layer3.8.bn2.bias, backbone.layer3.8.bn2.running_mean, backbone.layer3.8.bn2.running_var, backbone.layer3.8.bn2.num_batches_tracked, backbone.layer3.8.conv3.weight, backbone.layer3.8.bn3.weight, backbone.layer3.8.bn3.bias, backbone.layer3.8.bn3.running_mean, backbone.layer3.8.bn3.running_var, backbone.layer3.8.bn3.num_batches_tracked, backbone.layer3.9.conv1.weight, backbone.layer3.9.bn1.weight, backbone.layer3.9.bn1.bias, backbone.layer3.9.bn1.running_mean, backbone.layer3.9.bn1.running_var, backbone.layer3.9.bn1.num_batches_tracked, backbone.layer3.9.conv2.weight, backbone.layer3.9.bn2.weight, backbone.layer3.9.bn2.bias, backbone.layer3.9.bn2.running_mean, backbone.layer3.9.bn2.running_var, backbone.layer3.9.bn2.num_batches_tracked, backbone.layer3.9.conv3.weight, backbone.layer3.9.bn3.weight, backbone.layer3.9.bn3.bias, backbone.layer3.9.bn3.running_mean, backbone.layer3.9.bn3.running_var, backbone.layer3.9.bn3.num_batches_tracked, backbone.layer3.10.conv1.weight, backbone.layer3.10.bn1.weight, backbone.layer3.10.bn1.bias, backbone.layer3.10.bn1.running_mean, backbone.layer3.10.bn1.running_var, backbone.layer3.10.bn1.num_batches_tracked, backbone.layer3.10.conv2.weight, backbone.layer3.10.bn2.weight, backbone.layer3.10.bn2.bias, backbone.layer3.10.bn2.running_mean, backbone.layer3.10.bn2.running_var, backbone.layer3.10.bn2.num_batches_tracked, backbone.layer3.10.conv3.weight, backbone.layer3.10.bn3.weight, backbone.layer3.10.bn3.bias, backbone.layer3.10.bn3.running_mean, backbone.layer3.10.bn3.running_var, backbone.layer3.10.bn3.num_batches_tracked, backbone.layer3.11.conv1.weight, backbone.layer3.11.bn1.weight, backbone.layer3.11.bn1.bias, backbone.layer3.11.bn1.running_mean, backbone.layer3.11.bn1.running_var, backbone.layer3.11.bn1.num_batches_tracked, backbone.layer3.11.conv2.weight, backbone.layer3.11.bn2.weight, backbone.layer3.11.bn2.bias, backbone.layer3.11.bn2.running_mean, backbone.layer3.11.bn2.running_var, backbone.layer3.11.bn2.num_batches_tracked, backbone.layer3.11.conv3.weight, backbone.layer3.11.bn3.weight, backbone.layer3.11.bn3.bias, backbone.layer3.11.bn3.running_mean, backbone.layer3.11.bn3.running_var, backbone.layer3.11.bn3.num_batches_tracked, backbone.layer3.12.conv1.weight, backbone.layer3.12.bn1.weight, backbone.layer3.12.bn1.bias, backbone.layer3.12.bn1.running_mean, backbone.layer3.12.bn1.running_var, backbone.layer3.12.bn1.num_batches_tracked, backbone.layer3.12.conv2.weight, backbone.layer3.12.bn2.weight, backbone.layer3.12.bn2.bias, backbone.layer3.12.bn2.running_mean, backbone.layer3.12.bn2.running_var, backbone.layer3.12.bn2.num_batches_tracked, backbone.layer3.12.conv3.weight, backbone.layer3.12.bn3.weight, backbone.layer3.12.bn3.bias, backbone.layer3.12.bn3.running_mean, backbone.layer3.12.bn3.running_var, backbone.layer3.12.bn3.num_batches_tracked, backbone.layer3.13.conv1.weight, backbone.layer3.13.bn1.weight, backbone.layer3.13.bn1.bias, backbone.layer3.13.bn1.running_mean, backbone.layer3.13.bn1.running_var, backbone.layer3.13.bn1.num_batches_tracked, backbone.layer3.13.conv2.weight, backbone.layer3.13.bn2.weight, backbone.layer3.13.bn2.bias, backbone.layer3.13.bn2.running_mean, backbone.layer3.13.bn2.running_var, backbone.layer3.13.bn2.num_batches_tracked, backbone.layer3.13.conv3.weight, backbone.layer3.13.bn3.weight, backbone.layer3.13.bn3.bias, backbone.layer3.13.bn3.running_mean, backbone.layer3.13.bn3.running_var, backbone.layer3.13.bn3.num_batches_tracked, backbone.layer3.14.conv1.weight, backbone.layer3.14.bn1.weight, backbone.layer3.14.bn1.bias, backbone.layer3.14.bn1.running_mean, backbone.layer3.14.bn1.running_var, backbone.layer3.14.bn1.num_batches_tracked, backbone.layer3.14.conv2.weight, backbone.layer3.14.bn2.weight, backbone.layer3.14.bn2.bias, backbone.layer3.14.bn2.running_mean, backbone.layer3.14.bn2.running_var, backbone.layer3.14.bn2.num_batches_tracked, backbone.layer3.14.conv3.weight, backbone.layer3.14.bn3.weight, backbone.layer3.14.bn3.bias, backbone.layer3.14.bn3.running_mean, backbone.layer3.14.bn3.running_var, backbone.layer3.14.bn3.num_batches_tracked, backbone.layer3.15.conv1.weight, backbone.layer3.15.bn1.weight, backbone.layer3.15.bn1.bias, backbone.layer3.15.bn1.running_mean, backbone.layer3.15.bn1.running_var, backbone.layer3.15.bn1.num_batches_tracked, backbone.layer3.15.conv2.weight, backbone.layer3.15.bn2.weight, backbone.layer3.15.bn2.bias, backbone.layer3.15.bn2.running_mean, backbone.layer3.15.bn2.running_var, backbone.layer3.15.bn2.num_batches_tracked, backbone.layer3.15.conv3.weight, backbone.layer3.15.bn3.weight, backbone.layer3.15.bn3.bias, backbone.layer3.15.bn3.running_mean, backbone.layer3.15.bn3.running_var, backbone.layer3.15.bn3.num_batches_tracked, backbone.layer3.16.conv1.weight, backbone.layer3.16.bn1.weight, backbone.layer3.16.bn1.bias, backbone.layer3.16.bn1.running_mean, backbone.layer3.16.bn1.running_var, backbone.layer3.16.bn1.num_batches_tracked, backbone.layer3.16.conv2.weight, backbone.layer3.16.bn2.weight, backbone.layer3.16.bn2.bias, backbone.layer3.16.bn2.running_mean, backbone.layer3.16.bn2.running_var, backbone.layer3.16.bn2.num_batches_tracked, backbone.layer3.16.conv3.weight, backbone.layer3.16.bn3.weight, backbone.layer3.16.bn3.bias, backbone.layer3.16.bn3.running_mean, backbone.layer3.16.bn3.running_var, backbone.layer3.16.bn3.num_batches_tracked, backbone.layer3.17.conv1.weight, backbone.layer3.17.bn1.weight, backbone.layer3.17.bn1.bias, backbone.layer3.17.bn1.running_mean, backbone.layer3.17.bn1.running_var, backbone.layer3.17.bn1.num_batches_tracked, backbone.layer3.17.conv2.weight, backbone.layer3.17.bn2.weight, backbone.layer3.17.bn2.bias, backbone.layer3.17.bn2.running_mean, backbone.layer3.17.bn2.running_var, backbone.layer3.17.bn2.num_batches_tracked, backbone.layer3.17.conv3.weight, backbone.layer3.17.bn3.weight, backbone.layer3.17.bn3.bias, backbone.layer3.17.bn3.running_mean, backbone.layer3.17.bn3.running_var, backbone.layer3.17.bn3.num_batches_tracked, backbone.layer3.18.conv1.weight, backbone.layer3.18.bn1.weight, backbone.layer3.18.bn1.bias, backbone.layer3.18.bn1.running_mean, backbone.layer3.18.bn1.running_var, backbone.layer3.18.bn1.num_batches_tracked, backbone.layer3.18.conv2.weight, backbone.layer3.18.bn2.weight, backbone.layer3.18.bn2.bias, backbone.layer3.18.bn2.running_mean, backbone.layer3.18.bn2.running_var, backbone.layer3.18.bn2.num_batches_tracked, backbone.layer3.18.conv3.weight, backbone.layer3.18.bn3.weight, backbone.layer3.18.bn3.bias, backbone.layer3.18.bn3.running_mean, backbone.layer3.18.bn3.running_var, backbone.layer3.18.bn3.num_batches_tracked, backbone.layer3.19.conv1.weight, backbone.layer3.19.bn1.weight, backbone.layer3.19.bn1.bias, backbone.layer3.19.bn1.running_mean, backbone.layer3.19.bn1.running_var, backbone.layer3.19.bn1.num_batches_tracked, backbone.layer3.19.conv2.weight, backbone.layer3.19.bn2.weight, backbone.layer3.19.bn2.bias, backbone.layer3.19.bn2.running_mean, backbone.layer3.19.bn2.running_var, backbone.layer3.19.bn2.num_batches_tracked, backbone.layer3.19.conv3.weight, backbone.layer3.19.bn3.weight, backbone.layer3.19.bn3.bias, backbone.layer3.19.bn3.running_mean, backbone.layer3.19.bn3.running_var, backbone.layer3.19.bn3.num_batches_tracked, backbone.layer3.20.conv1.weight, backbone.layer3.20.bn1.weight, backbone.layer3.20.bn1.bias, backbone.layer3.20.bn1.running_mean, backbone.layer3.20.bn1.running_var, backbone.layer3.20.bn1.num_batches_tracked, backbone.layer3.20.conv2.weight, backbone.layer3.20.bn2.weight, backbone.layer3.20.bn2.bias, backbone.layer3.20.bn2.running_mean, backbone.layer3.20.bn2.running_var, backbone.layer3.20.bn2.num_batches_tracked, backbone.layer3.20.conv3.weight, backbone.layer3.20.bn3.weight, backbone.layer3.20.bn3.bias, backbone.layer3.20.bn3.running_mean, backbone.layer3.20.bn3.running_var, backbone.layer3.20.bn3.num_batches_tracked, backbone.layer3.21.conv1.weight, backbone.layer3.21.bn1.weight, backbone.layer3.21.bn1.bias, backbone.layer3.21.bn1.running_mean, backbone.layer3.21.bn1.running_var, backbone.layer3.21.bn1.num_batches_tracked, backbone.layer3.21.conv2.weight, backbone.layer3.21.bn2.weight, backbone.layer3.21.bn2.bias, backbone.layer3.21.bn2.running_mean, backbone.layer3.21.bn2.running_var, backbone.layer3.21.bn2.num_batches_tracked, backbone.layer3.21.conv3.weight, backbone.layer3.21.bn3.weight, backbone.layer3.21.bn3.bias, backbone.layer3.21.bn3.running_mean, backbone.layer3.21.bn3.running_var, backbone.layer3.21.bn3.num_batches_tracked, backbone.layer3.22.conv1.weight, backbone.layer3.22.bn1.weight, backbone.layer3.22.bn1.bias, backbone.layer3.22.bn1.running_mean, backbone.layer3.22.bn1.running_var, backbone.layer3.22.bn1.num_batches_tracked, backbone.layer3.22.conv2.weight, backbone.layer3.22.bn2.weight, backbone.layer3.22.bn2.bias, backbone.layer3.22.bn2.running_mean, backbone.layer3.22.bn2.running_var, backbone.layer3.22.bn2.num_batches_tracked, backbone.layer3.22.conv3.weight, backbone.layer3.22.bn3.weight, backbone.layer3.22.bn3.bias, backbone.layer3.22.bn3.running_mean, backbone.layer3.22.bn3.running_var, backbone.layer3.22.bn3.num_batches_tracked
+
+2023-02-09 20:42:33,308 - mmdet - INFO - Start running, host: haihan@haihan, work_dir: /home/haihan/projects/mmlab/work_dirs/mmdet_haihan
+2023-02-09 20:42:33,308 - mmdet - INFO - Hooks will be executed in the following order:
+before_run:
+(VERY_HIGH   ) StepLrUpdaterHook                  
+(NORMAL      ) CheckpointHook                     
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_epoch:
+(VERY_HIGH   ) StepLrUpdaterHook                  
+(NORMAL      ) NumClassCheckHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_train_iter:
+(VERY_HIGH   ) StepLrUpdaterHook                  
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+ -------------------- 
+after_train_iter:
+(ABOVE_NORMAL) OptimizerHook                      
+(NORMAL      ) CheckpointHook                     
+(LOW         ) IterTimerHook                      
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_train_epoch:
+(NORMAL      ) CheckpointHook                     
+(LOW         ) EvalHook                           
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_epoch:
+(NORMAL      ) NumClassCheckHook                  
+(LOW         ) IterTimerHook                      
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+before_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_iter:
+(LOW         ) IterTimerHook                      
+ -------------------- 
+after_val_epoch:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+after_run:
+(VERY_LOW    ) TextLoggerHook                     
+ -------------------- 
+2023-02-09 20:42:33,308 - mmdet - INFO - workflow: [('train', 1)], max: 12 epochs
+2023-02-09 20:42:33,308 - mmdet - INFO - Checkpoints will be saved to /home/haihan/projects/mmlab/work_dirs/mmdet_haihan by HardDiskBackend.
+2023-02-09 20:42:44,949 - mmdet - INFO - Saving checkpoint at 1 epochs
+2023-02-09 20:42:53,362 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:42:53,490 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.014
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.056
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.001
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.001
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.022
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.220
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.220
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.220
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.092
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.275
+
+2023-02-09 20:42:53,491 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:42:53,672 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.042
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.091
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.027
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.006
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.001
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.093
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.442
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.442
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.442
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.100
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.108
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.572
+
+2023-02-09 20:42:53,673 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:42:53,674 - mmdet - INFO - Epoch(val) [1][13]	bbox_mAP: 0.0142, bbox_mAP_50: 0.0564, bbox_mAP_75: 0.0010, bbox_mAP_s: 0.0000, bbox_mAP_m: 0.0007, bbox_mAP_l: 0.0218, bbox_mAP_copypaste: 0.0142 0.0564 0.0010 0.0000 0.0007 0.0218, segm_mAP: 0.0422, segm_mAP_50: 0.0914, segm_mAP_75: 0.0266, segm_mAP_s: 0.0059, segm_mAP_m: 0.0007, segm_mAP_l: 0.0932, segm_mAP_copypaste: 0.0422 0.0914 0.0266 0.0059 0.0007 0.0932
+2023-02-09 20:43:06,744 - mmdet - INFO - Saving checkpoint at 2 epochs
+2023-02-09 20:43:14,796 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:43:14,973 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.140
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.323
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.075
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.008
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.091
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.180
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.450
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.450
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.450
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.100
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.425
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.478
+
+2023-02-09 20:43:14,973 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:43:15,137 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.239
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.341
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.304
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.012
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.094
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.328
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.672
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.672
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.672
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.200
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.533
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.744
+
+2023-02-09 20:43:15,138 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:43:15,138 - mmdet - INFO - Epoch(val) [2][13]	bbox_mAP: 0.1400, bbox_mAP_50: 0.3235, bbox_mAP_75: 0.0748, bbox_mAP_s: 0.0078, bbox_mAP_m: 0.0908, bbox_mAP_l: 0.1803, bbox_mAP_copypaste: 0.1400 0.3235 0.0748 0.0078 0.0908 0.1803, segm_mAP: 0.2393, segm_mAP_50: 0.3406, segm_mAP_75: 0.3044, segm_mAP_s: 0.0123, segm_mAP_m: 0.0936, segm_mAP_l: 0.3283, segm_mAP_copypaste: 0.2393 0.3406 0.3044 0.0123 0.0936 0.3283
+2023-02-09 20:43:28,267 - mmdet - INFO - Saving checkpoint at 3 epochs
+2023-02-09 20:43:35,953 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:43:36,077 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.230
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.500
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.152
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.025
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.120
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.278
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.510
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.510
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.510
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.100
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.475
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.544
+
+2023-02-09 20:43:36,077 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:43:36,243 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.357
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.508
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.423
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.028
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.189
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.435
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.730
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.730
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.730
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.250
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.658
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.781
+
+2023-02-09 20:43:36,245 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:43:36,245 - mmdet - INFO - Epoch(val) [3][13]	bbox_mAP: 0.2298, bbox_mAP_50: 0.4999, bbox_mAP_75: 0.1517, bbox_mAP_s: 0.0252, bbox_mAP_m: 0.1198, bbox_mAP_l: 0.2783, bbox_mAP_copypaste: 0.2298 0.4999 0.1517 0.0252 0.1198 0.2783, segm_mAP: 0.3571, segm_mAP_50: 0.5080, segm_mAP_75: 0.4229, segm_mAP_s: 0.0281, segm_mAP_m: 0.1891, segm_mAP_l: 0.4348, segm_mAP_copypaste: 0.3571 0.5080 0.4229 0.0281 0.1891 0.4348
+2023-02-09 20:43:49,435 - mmdet - INFO - Saving checkpoint at 4 epochs
+2023-02-09 20:43:58,064 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:43:58,172 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.213
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.505
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.048
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.205
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.242
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.520
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.520
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.520
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.642
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.508
+
+2023-02-09 20:43:58,173 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:43:58,316 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.372
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.516
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.446
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.003
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.226
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.446
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.764
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.764
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.764
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.100
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.783
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.794
+
+2023-02-09 20:43:58,317 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:43:58,317 - mmdet - INFO - Epoch(val) [4][13]	bbox_mAP: 0.2126, bbox_mAP_50: 0.5046, bbox_mAP_75: 0.0482, bbox_mAP_s: 0.0000, bbox_mAP_m: 0.2050, bbox_mAP_l: 0.2420, bbox_mAP_copypaste: 0.2126 0.5046 0.0482 0.0000 0.2050 0.2420, segm_mAP: 0.3717, segm_mAP_50: 0.5155, segm_mAP_75: 0.4464, segm_mAP_s: 0.0034, segm_mAP_m: 0.2262, segm_mAP_l: 0.4455, segm_mAP_copypaste: 0.3717 0.5155 0.4464 0.0034 0.2262 0.4455
+2023-02-09 20:44:11,024 - mmdet - INFO - Saving checkpoint at 5 epochs
+2023-02-09 20:44:17,180 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:44:17,282 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.277
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.552
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.208
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.009
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.263
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.314
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.570
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.570
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.570
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.100
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.633
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.575
+
+2023-02-09 20:44:17,282 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:44:17,414 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.409
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.549
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.497
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.005
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.299
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.477
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.774
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.774
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.774
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.250
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.750
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.811
+
+2023-02-09 20:44:17,416 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:44:17,416 - mmdet - INFO - Epoch(val) [5][13]	bbox_mAP: 0.2771, bbox_mAP_50: 0.5517, bbox_mAP_75: 0.2082, bbox_mAP_s: 0.0092, bbox_mAP_m: 0.2628, bbox_mAP_l: 0.3139, bbox_mAP_copypaste: 0.2771 0.5517 0.2082 0.0092 0.2628 0.3139, segm_mAP: 0.4090, segm_mAP_50: 0.5489, segm_mAP_75: 0.4966, segm_mAP_s: 0.0055, segm_mAP_m: 0.2993, segm_mAP_l: 0.4769, segm_mAP_copypaste: 0.4090 0.5489 0.4966 0.0055 0.2993 0.4769
+2023-02-09 20:44:29,449 - mmdet - INFO - Saving checkpoint at 6 epochs
+2023-02-09 20:44:34,143 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:44:34,220 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.460
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.678
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.522
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.005
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.390
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.516
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.664
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.664
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.664
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.100
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.675
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.692
+
+2023-02-09 20:44:34,220 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:44:34,318 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.566
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.675
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.625
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.003
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.401
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.652
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.796
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.796
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.796
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.200
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.750
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.844
+
+2023-02-09 20:44:34,319 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:44:34,319 - mmdet - INFO - Epoch(val) [6][13]	bbox_mAP: 0.4596, bbox_mAP_50: 0.6781, bbox_mAP_75: 0.5216, bbox_mAP_s: 0.0053, bbox_mAP_m: 0.3903, bbox_mAP_l: 0.5155, bbox_mAP_copypaste: 0.4596 0.6781 0.5216 0.0053 0.3903 0.5155, segm_mAP: 0.5660, segm_mAP_50: 0.6755, segm_mAP_75: 0.6254, segm_mAP_s: 0.0035, segm_mAP_m: 0.4006, segm_mAP_l: 0.6522, segm_mAP_copypaste: 0.5660 0.6755 0.6254 0.0035 0.4006 0.6522
+2023-02-09 20:44:46,013 - mmdet - INFO - Saving checkpoint at 7 epochs
+2023-02-09 20:44:50,143 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:44:50,214 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.564
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.734
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.653
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.006
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.441
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.626
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.716
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.716
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.716
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.150
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.725
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.744
+
+2023-02-09 20:44:50,214 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:44:50,310 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.639
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.737
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.708
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.004
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.458
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.722
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.792
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.792
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.792
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.250
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.758
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.833
+
+2023-02-09 20:44:50,311 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:44:50,311 - mmdet - INFO - Epoch(val) [7][13]	bbox_mAP: 0.5640, bbox_mAP_50: 0.7345, bbox_mAP_75: 0.6529, bbox_mAP_s: 0.0063, bbox_mAP_m: 0.4414, bbox_mAP_l: 0.6259, bbox_mAP_copypaste: 0.5640 0.7345 0.6529 0.0063 0.4414 0.6259, segm_mAP: 0.6391, segm_mAP_50: 0.7366, segm_mAP_75: 0.7077, segm_mAP_s: 0.0037, segm_mAP_m: 0.4581, segm_mAP_l: 0.7216, segm_mAP_copypaste: 0.6391 0.7366 0.7077 0.0037 0.4581 0.7216
+2023-02-09 20:45:02,330 - mmdet - INFO - Saving checkpoint at 8 epochs
+2023-02-09 20:45:04,823 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:45:04,854 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.573
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.730
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.641
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.465
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.646
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.646
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.646
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.646
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.575
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.706
+
+2023-02-09 20:45:04,854 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:45:04,893 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.645
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.730
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.703
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.463
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.742
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.718
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.718
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.718
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.592
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.800
+
+2023-02-09 20:45:04,894 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:45:04,894 - mmdet - INFO - Epoch(val) [8][13]	bbox_mAP: 0.5730, bbox_mAP_50: 0.7300, bbox_mAP_75: 0.6406, bbox_mAP_s: 0.0000, bbox_mAP_m: 0.4646, bbox_mAP_l: 0.6464, bbox_mAP_copypaste: 0.5730 0.7300 0.6406 0.0000 0.4646 0.6464, segm_mAP: 0.6455, segm_mAP_50: 0.7300, segm_mAP_75: 0.7026, segm_mAP_s: 0.0000, segm_mAP_m: 0.4631, segm_mAP_l: 0.7417, segm_mAP_copypaste: 0.6455 0.7300 0.7026 0.0000 0.4631 0.7417
+2023-02-09 20:45:16,741 - mmdet - INFO - Saving checkpoint at 9 epochs
+2023-02-09 20:45:19,556 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:45:19,596 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.572
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.757
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.651
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.493
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.633
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.684
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.684
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.684
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.717
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.711
+
+2023-02-09 20:45:19,596 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:45:19,648 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.662
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.757
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.718
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.511
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.747
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.776
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.776
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.776
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.750
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.828
+
+2023-02-09 20:45:19,649 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:45:19,649 - mmdet - INFO - Epoch(val) [9][13]	bbox_mAP: 0.5723, bbox_mAP_50: 0.7574, bbox_mAP_75: 0.6510, bbox_mAP_s: 0.0000, bbox_mAP_m: 0.4930, bbox_mAP_l: 0.6333, bbox_mAP_copypaste: 0.5723 0.7574 0.6510 0.0000 0.4930 0.6333, segm_mAP: 0.6617, segm_mAP_50: 0.7574, segm_mAP_75: 0.7178, segm_mAP_s: 0.0000, segm_mAP_m: 0.5105, segm_mAP_l: 0.7470, segm_mAP_copypaste: 0.6617 0.7574 0.7178 0.0000 0.5105 0.7470
+2023-02-09 20:45:31,753 - mmdet - INFO - Saving checkpoint at 10 epochs
+2023-02-09 20:45:34,461 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:45:34,497 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.586
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.758
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.667
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.485
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.651
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.700
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.700
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.700
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.708
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.736
+
+2023-02-09 20:45:34,497 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:45:34,543 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.662
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.758
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.709
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.505
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.746
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.772
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.772
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.772
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.750
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.822
+
+2023-02-09 20:45:34,543 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:45:34,543 - mmdet - INFO - Epoch(val) [10][13]	bbox_mAP: 0.5856, bbox_mAP_50: 0.7581, bbox_mAP_75: 0.6668, bbox_mAP_s: 0.0000, bbox_mAP_m: 0.4847, bbox_mAP_l: 0.6505, bbox_mAP_copypaste: 0.5856 0.7581 0.6668 0.0000 0.4847 0.6505, segm_mAP: 0.6624, segm_mAP_50: 0.7581, segm_mAP_75: 0.7092, segm_mAP_s: 0.0000, segm_mAP_m: 0.5047, segm_mAP_l: 0.7464, segm_mAP_copypaste: 0.6624 0.7581 0.7092 0.0000 0.5047 0.7464
+2023-02-09 20:45:46,522 - mmdet - INFO - Saving checkpoint at 11 epochs
+2023-02-09 20:45:49,334 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:45:49,374 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.579
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.750
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.649
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.495
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.641
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.688
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.688
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.688
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.708
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.719
+
+2023-02-09 20:45:49,374 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:45:49,423 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.662
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.750
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.711
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.518
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.745
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.772
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.772
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.772
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.750
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.822
+
+2023-02-09 20:45:49,424 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:45:49,424 - mmdet - INFO - Epoch(val) [11][13]	bbox_mAP: 0.5791, bbox_mAP_50: 0.7499, bbox_mAP_75: 0.6493, bbox_mAP_s: 0.0000, bbox_mAP_m: 0.4951, bbox_mAP_l: 0.6412, bbox_mAP_copypaste: 0.5791 0.7499 0.6493 0.0000 0.4951 0.6412, segm_mAP: 0.6617, segm_mAP_50: 0.7499, segm_mAP_75: 0.7112, segm_mAP_s: 0.0000, segm_mAP_m: 0.5179, segm_mAP_l: 0.7451, segm_mAP_copypaste: 0.6617 0.7499 0.7112 0.0000 0.5179 0.7451
+2023-02-09 20:46:01,617 - mmdet - INFO - Saving checkpoint at 12 epochs
+2023-02-09 20:46:04,668 - mmdet - INFO - Evaluating bbox...
+2023-02-09 20:46:04,706 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.578
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.748
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.648
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.486
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.640
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.688
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.688
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.688
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.708
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.719
+
+2023-02-09 20:46:04,706 - mmdet - INFO - Evaluating segm...
+2023-02-09 20:46:04,755 - mmdet - INFO - 
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.664
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=1000 ] = 0.748
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=1000 ] = 0.710
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.508
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.747
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.772
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=300 ] = 0.772
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=1000 ] = 0.772
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=1000 ] = 0.000
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=1000 ] = 0.750
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=1000 ] = 0.822
+
+2023-02-09 20:46:04,756 - mmdet - INFO - Exp name: mmdet_haihan.py
+2023-02-09 20:46:04,756 - mmdet - INFO - Epoch(val) [12][13]	bbox_mAP: 0.5778, bbox_mAP_50: 0.7484, bbox_mAP_75: 0.6478, bbox_mAP_s: 0.0000, bbox_mAP_m: 0.4857, bbox_mAP_l: 0.6397, bbox_mAP_copypaste: 0.5778 0.7484 0.6478 0.0000 0.4857 0.6397, segm_mAP: 0.6635, segm_mAP_50: 0.7484, segm_mAP_75: 0.7096, segm_mAP_s: 0.0000, segm_mAP_m: 0.5079, segm_mAP_l: 0.7472, segm_mAP_copypaste: 0.6635 0.7484 0.7096 0.0000 0.5079 0.7472
